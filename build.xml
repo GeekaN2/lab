@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<project name="HelloWorld" default="build">
+	<property name="sources" value="src/" />
+	<property name="main-class" value="HelloWorld"/>
+	<property name="success-build" value="false"/>
+
+
+	<scriptdef name="propertyreset" language="javascript" description="Allows to assign @{property} new value">
+		<attribute name="name"/>
+		<attribute name="value"/>
+	    project.setProperty(attributes.get("name"), attributes.get("value"));
+	</scriptdef>
+
+
+	<macrodef name="git">
+		<attribute name="command" />
+		<attribute name="dir" default="" />
+		<element name="args" optional="true" />
+		<sequential>
+			<echo message="git @{command}" />
+			<exec executable="git" dir="@{dir}">
+				<arg value="@{command}" />
+				<args/>
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="/antlib/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+
+	<target name="compile" depends="clean">
+		<mkdir dir="build/classes"/>
+		<javac srcdir="${sources}" destdir="build/classes" debug="true" includeantruntime="true">
+			<classpath>
+				<path id="org.junit" location="C:/Junit4/junit-4.10.jar" />
+			</classpath>
+		</javac>
+
+		<copy todir="build/resources">
+			<fileset dir="resources"/>
+		</copy>
+	</target>
+
+	<target name="build" depends="compile">
+		<jar destfile="build/${main-class}.jar" basedir="build/classes">
+			<manifest>
+				<attribute name="Main-class" value="${main-class}"/>
+			</manifest>
+		</jar>
+		<propertyreset name="success-build" value="true"/>
+	</target>
+
+	<target name="clean" unless="dontclean">
+		<delete dir="build"/>
+		<delete dir="src-alt"/>
+	</target>
+
+	<target name="test" depends="compile">
+		<junit showoutput="yes" printsummary="yes" haltonfailure="no">
+			<classpath>
+				<pathelement location="build/classes"/>
+			</classpath>
+			<test name="TestTest"/>
+		</junit>
+	</target>
+
+	<target name="native2ascii">
+		<native2ascii src="resources" dest="build/resources_ascii" ext=".properties"/>
+	</target>
+
+	<target name="alt" depends="clean">
+		<mkdir dir="src-alt"/>
+		<copy todir="src-alt">
+			<fileset dir="src"/>
+		</copy>
+
+		<property name="dontclean" value="true"/>
+		<propertyreset name="sources" value="src-alt/"/>
+		<propertyreset name="main-class" value="Halolo"/>
+
+		<replaceregexp file="${sources}/HelloWorld.java" match="HelloWorld" replace="Halolo" flags="g" byline="true"/>
+		<replaceregexp file="${sources}/TestTest.java" match="HelloWorld" replace="Halolo" flags="g" byline="true"/>
+		<rename src="${sources}/HelloWorld.java" dest="${sources}/Halolo.java"/>
+
+		<antcall target="build"/>
+	</target>
+
+	<target name="prev-commit">
+		<exec executable="git">
+			<arg value="reset"/>
+			<arg value="--hard"/>
+			<arg value="HEAD~1"/>
+		</exec>
+	</target>
+
+	<target name="version" description="Commits all changes to version git">
+		<input message="Commit message" addproperty="commit-message" />
+
+		<echo message="Commiting all changes with message ${commit-message}" />
+		<git command="add">
+			<args>
+				<arg value="." />
+			</args>
+		</git>
+		<git command="commit">
+			<args>
+				<arg value="-am ${commit-message}" />
+			</args>
+		</git>
+	</target>
+
+	<target name="history-svn" if="lastversion">
+		<exec executable="svn">
+			<arg line="update src -r ${revision.good}"/>
+		</exec>
+	</target>
+
+	<target name="music">
+
+		<property name="play-music" value="true"/>
+		<antcall target="build"/>
+
+	</target>
+
+	<target name="history">
+		<trycatch>
+			<try>
+			 	<echo>Try to complete this f*cking f*ck f*ck</echo>
+				<antcall target="compile"/>
+			</try>
+
+			<catch>
+				<echo>Version is bruh, can't compile this sheat</echo>
+				<!-- load prev version try to compile again-->
+			</catch>
+
+			<finally>
+				<echo>In &lt;finally&gt;.</echo>
+			</finally>
+		</trycatch>
+	</target>
+
+	<target name="load-prev-version">
+		<exec executable="/usr/local/bin/svn">
+			<arg value="up" />
+			<arg value="-r10" />
+    </exec>
+	</target>
+
+
+	<sound>
+		<success source="./sounds/success.wav"/>
+		<fail source="./sounds/fail.wav"/>
+	</sound>
+
+</project>
+
