@@ -11,7 +11,7 @@ public class HelloWorld {
 
     public static void main(String[] args) throws java.io.UnsupportedEncodingException {
     	PrintStream output = new PrintStream(System.out, true, "UTF-8");
-        HelloWorld hello = new HelloWorld();
+        HelloWorld hello = new HelhloWorld();
         Locale locale = new Locale(LANGUAGE_DE, COUNTRY_DE);
 
         output.println(hello.sayHello(locale));
